@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Попіксельне порівняння зображень</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>Попіксельне порівняння зображень</h1>
+      <p class="muted">Завантаж дві картинки однакового розміру або увімкни підгонку.</p>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <h2>1) Завантаження</h2>
+        <div class="uploader">
+          <label class="file">
+            <span>Еталон (A):</span>
+            <input id="fileA" type="file" accept="image/*" />
+          </label>
+          <label class="file">
+            <span>Для порівняння (B):</span>
+            <input id="fileB" type="file" accept="image/*" />
+          </label>
+        </div>
+
+        <div class="controls">
+          <label class="chip"><input id="resizeToA" type="checkbox" /> Примусово підганяти B під A</label>
+          <label class="chip">
+            Поріг: <input id="tolerance" type="range" min="0" max="255" value="16" />
+            <span id="tolVal">16</span>
+          </label>
+          <label class="chip">
+            Режим:
+            <select id="mode">
+              <option value="highlight">Підсвітка</option>
+              <option value="heatmap">Теплова карта</option>
+              <option value="diffRGB">Абс. різниці RGB</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="controls">
+          <button id="btnCompare" class="btn" disabled>Порівняти</button>
+          <button id="btnDownload" class="btn secondary" disabled>Завантажити DIFF</button>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><div class="k" id="mDims">–</div><div class="t">Розмір</div></div>
+          <div class="metric"><div class="k" id="mPct">–</div><div class="t">% різних</div></div>
+          <div class="metric"><div class="k" id="mDiffCount">–</div><div class="t">К-сть різних пікселів</div></div>
+          <div class="metric"><div class="k" id="mMSE">–</div><div class="t">MSE</div></div>
+          <div class="metric"><div class="k" id="mPSNR">–</div><div class="t">PSNR</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2) Оригінали</h2>
+        <div class="panel">
+          <canvas id="canvasA" width="0" height="0" aria-label="A"></canvas>
+          <canvas id="canvasB" width="0" height="0" aria-label="B" style="margin-top:8px"></canvas>
+        </div>
+
+        <h2 style="margin-top:8px">3) Перегляди (повзунок / миготіння)</h2>
+        <div class="panel">
+          <div class="overlay-wrap" id="overlay" data-state="empty">
+            <div class="overlay-placeholder">
+              <svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M7 14l3-3 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+              </svg>
+              <p>Тут буде порівння двох картинок, завантажених вище ↑</p>
+            </div>
+
+            <img id="imgA" class="overlay-img" alt="A">
+            <img id="imgB" class="overlay-img top" alt="B">
+          </div>
+
+          <input class="overlay-slider" id="slider" type="range" min="0" max="100" value="50" />
+          <div class="controls" style="margin-top:8px">
+            <button id="btnBlink" class="btn secondary" disabled>Миготіти A/B</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>4) Результат порівняння</h2>
+        <div class="panel">
+          <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF"></canvas>
+        </div>
+        <p class="muted small">«Підсвітка»: червоним — перевищує поріг. <br>
+          «Теплова карта»: синій→червоний. <br>
+          «Абс. різниці»: |ΔR|, |ΔG|, |ΔB|.</p>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
