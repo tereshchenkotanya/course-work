@@ -14,7 +14,7 @@
     </header>
 
     <main class="container">
-      <section class="card">
+      <section class="card full-width">
         <h2>1) Завантаження</h2>
         <div class="uploader">
           <label class="file">
@@ -57,7 +57,48 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card full-width">
+        <h2>2) Оригінали</h2>
+        <div class="panel originals-panel">
+          <div class="original-item">
+            <canvas id="canvasA" width="0" height="0" aria-label="A"></canvas>
+          </div>
+          <div class="original-item">
+            <canvas id="canvasB" width="0" height="0" aria-label="B"></canvas>
+          </div>
+          <div class="original-item overlay-container">
+            <div class="overlay-wrap" id="overlay" data-state="empty">
+              <div class="overlay-placeholder">
+                <svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M7 14l3-3 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
+                </svg>
+                <p>Тут буде порівння двох картинок, завантажених вище ↑</p>
+              </div>
+              <img id="imgA" class="overlay-img" alt="A">
+              <img id="imgB" class="overlay-img top" alt="B">
+            </div>
+            <input class="overlay-slider" id="slider" type="range" min="0" max="100" value="50" />
+            <div class="controls" style="margin-top:8px">
+              <button id="btnBlink" class="btn secondary" disabled>Миготіти A/B</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card half-width">
+        <h2>4) Результат порівняння</h2>
+        <div class="panel" style="position: relative;">
+          <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF" style="position: relative; z-index: 1;"></canvas>
+          <canvas id="canvasSelection" width="0" height="0" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2;"></canvas>
+        </div>
+        <p class="muted small">«Підсвітка»: червоним — перевищує поріг. <br>
+          «Теплова карта»: синій→червоний. <br>
+          «Абс. різниці»: |ΔR|, |ΔG|, |ΔB|.</p>
+      </section>
+
+      <section class="card half-width">
         <h2>Метрики для вибраної області</h2>
         <div class="controls">
           <label class="chip"><input id="enableRegionSelect" type="checkbox" /> Увімкнути вибір області</label>
@@ -71,47 +112,6 @@
           <div class="metric"><div class="k" id="rmPSNR">–</div><div class="t">PSNR</div></div>
         </div>
         <p class="muted small">Увімкніть вибір області та перетягніть мишкою на canvas з результатом порівняння, щоб вибрати область для аналізу.</p>
-      </section>
-
-      <section class="card">
-        <h2>2) Оригінали</h2>
-        <div class="panel">
-          <canvas id="canvasA" width="0" height="0" aria-label="A"></canvas>
-          <canvas id="canvasB" width="0" height="0" aria-label="B" style="margin-top:8px"></canvas>
-        </div>
-
-        <h2 style="margin-top:8px">3) Перегляди (повзунок / миготіння)</h2>
-        <div class="panel">
-          <div class="overlay-wrap" id="overlay" data-state="empty">
-            <div class="overlay-placeholder">
-              <svg width="44" height="44" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M7 14l3-3 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="9" cy="9" r="1.5" fill="currentColor"/>
-              </svg>
-              <p>Тут буде порівння двох картинок, завантажених вище ↑</p>
-            </div>
-
-            <img id="imgA" class="overlay-img" alt="A">
-            <img id="imgB" class="overlay-img top" alt="B">
-          </div>
-
-          <input class="overlay-slider" id="slider" type="range" min="0" max="100" value="50" />
-          <div class="controls" style="margin-top:8px">
-            <button id="btnBlink" class="btn secondary" disabled>Миготіти A/B</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>4) Результат порівняння</h2>
-        <div class="panel" style="position: relative;">
-          <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF" style="position: relative; z-index: 1;"></canvas>
-          <canvas id="canvasSelection" width="0" height="0" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2;"></canvas>
-        </div>
-        <p class="muted small">«Підсвітка»: червоним — перевищує поріг. <br>
-          «Теплова карта»: синій→червоний. <br>
-          «Абс. різниці»: |ΔR|, |ΔG|, |ΔB|.</p>
       </section>
     </main>
 

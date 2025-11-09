@@ -3,11 +3,11 @@ export type CompareMode = 'highlight' | 'heatmap' | 'diffRGB';
 export interface Metrics {
   width: number;
   height: number;
-  diffPixelsCount: number;  // NEW
-  totalPixels: number;      // NEW (можна прибрати, якщо не потрібно)
+  diffPixelsCount: number;
+  totalPixels: number;
   diffPixelsPct: number;
   mse: number;
-  psnr: number; // Infinity, якщо mse=0
+  psnr: number;
 }
 
 export interface CompareResult {
@@ -28,7 +28,6 @@ export function compareCanvases(
   const imgDataB = ctxB.getImageData(0, 0, W, H);
   const out = ctxOut.createImageData(W, H);
 
-// ПІДСТРАХУВАННЯ: вихідний canvas має такий самий розмір
   if (ctxOut.canvas.width  !== W) ctxOut.canvas.width  = W;
   if (ctxOut.canvas.height !== H) ctxOut.canvas.height = H;
 
@@ -55,7 +54,7 @@ export function compareCanvases(
     switch (mode) {
       case 'highlight':
         if (isDiff) {
-          outD[i]   = 239; // red
+          outD[i]   = 239;
           outD[i+1] = 68;
           outD[i+2] = 68;
           outD[i+3] = 255;
@@ -95,8 +94,8 @@ export function compareCanvases(
     metrics: {
       width: W,
       height: H,
-      diffPixelsCount: diffCount,   // NEW: кількість “інших” пікселів
-      totalPixels: total,           // NEW: (опційно) загальна к-сть пікселів
+      diffPixelsCount: diffCount,
+      totalPixels: total,
       diffPixelsPct: pct,
       mse,
       psnr,

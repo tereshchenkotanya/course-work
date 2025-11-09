@@ -56,7 +56,6 @@ tolVal.textContent = tolerance.value;
 tolerance.addEventListener('input', () => {
   tolVal.textContent = tolerance.value;
   currentTolerance = parseInt(tolerance.value, 10);
-  // Recalculate region metrics if a region is selected
   if (selectedRegion && selectedRegion.w > 0 && selectedRegion.h > 0) {
     calculateRegionMetrics(selectedRegion);
   }
@@ -68,7 +67,7 @@ async function onFilesChanged() {
   if (!a || !b) {
     btnCompare.disabled = true;
     btnBlink.disabled = true;
-    overlay.setAttribute('data-state', 'empty');  // показуємо плейсхолдер
+    overlay.setAttribute('data-state', 'empty');
     overlayA.removeAttribute('src');
     overlayB.removeAttribute('src');
     return;
@@ -81,7 +80,8 @@ async function onFilesChanged() {
     drawImageToCanvas(ctxA, imgObjA);
     drawImageToCanvas(ctxB, imgObjB);
 
-    // for overlay
+    syncOriginalHeights();
+
     overlayA.src = URL.createObjectURL(a);
     overlayB.src = URL.createObjectURL(b);
     overlay.setAttribute('data-state', 'ready');
@@ -106,7 +106,6 @@ btnCompare.addEventListener('click', async () => {
 
   if (!sameSize) {
     if (resizeToA.checked) {
-      // draw B into a temp canvas resized to A
       const tmp = document.createElement('canvas');
       tmp.width = W; tmp.height = H;
       const tctx = tmp.getContext('2d')!;
@@ -121,31 +120,32 @@ btnCompare.addEventListener('click', async () => {
     }
   }
 
-  // redraw to canvases to make sure sizes match
   drawImageToCanvas(ctxA, imgObjA, W, H);
   drawImageToCanvas(ctxB, bForCompare, W, H);
+  
+  setTimeout(() => {
+    syncOriginalHeights();
+    syncSelectionCanvasSize();
+  }, 100);
 
-  // Set canvas internal dimensions
   ctxD.canvas.width = W;
   ctxD.canvas.height = H;
   canvasSelection.width = W;
   canvasSelection.height = H;
   
-  // Ensure canvasDiff is visible with proper CSS
   canvasDiff.style.display = 'block';
   canvasDiff.style.width = '100%';
   canvasDiff.style.maxHeight = '480px';
   canvasDiff.style.position = 'relative';
   canvasDiff.style.zIndex = '1';
+  canvasDiff.style.pointerEvents = 'auto';
   
-  // Ensure canvasSelection is transparent and properly positioned
   canvasSelection.style.background = 'transparent';
   canvasSelection.style.pointerEvents = 'none';
   canvasSelection.style.zIndex = '2';
   canvasSelection.style.opacity = '0';
   canvasSelection.style.visibility = 'hidden';
   
-  // Clear selection canvas initially
   ctxSelection.clearRect(0, 0, canvasSelection.width, canvasSelection.height);
   
   syncSelectionCanvasSize();
@@ -155,7 +155,6 @@ btnCompare.addEventListener('click', async () => {
 
   const result = compareCanvases(ctxA, ctxB, ctxD, currentMode, currentTolerance);
 
-  // Verify that the canvas has content and is visible
   const imageData = ctxD.getImageData(0, 0, Math.min(10, W), Math.min(10, H));
   const hasData = imageData.data.some((val, idx) => idx % 4 !== 3 && val !== 0);
   console.log('Canvas diff check:', { 
@@ -170,15 +169,12 @@ btnCompare.addEventListener('click', async () => {
     console.error('Canvas dimensions are zero!', { W, H, canvasWidth: ctxD.canvas.width, canvasHeight: ctxD.canvas.height });
   }
   
-  // Force canvas to be visible
   canvasDiff.style.visibility = 'visible';
   canvasDiff.style.opacity = '1';
 
-  // Store image data for region calculations
   currentImageDataA = ctxA.getImageData(0, 0, W, H);
   currentImageDataB = ctxB.getImageData(0, 0, W, H);
 
-  // metrics UI
   mDims.textContent = `${result.metrics.width} × ${result.metrics.height}`;
   mPct.textContent = `${result.metrics.diffPixelsPct.toFixed(2)}%`;
   mMSE.textContent = result.metrics.mse.toFixed(2);
@@ -187,7 +183,6 @@ btnCompare.addEventListener('click', async () => {
 
   btnDownload.disabled = false;
   
-  // Clear region selection when new comparison is done
   clearRegionSelection();
 });
 
@@ -218,26 +213,55 @@ btnBlink.addEventListener('click', () => {
   }, 500);
 });
 
-// Region selection functionality
+function syncOriginalHeights() {
+  const canvasA = document.getElementById('canvasA') as HTMLCanvasElement;
+  const canvasB = document.getElementById('canvasB') as HTMLCanvasElement;
+  const overlay = document.getElementById('overlay') as HTMLDivElement;
+  const canvasDiff = document.getElementById('canvasDiff') as HTMLCanvasElement;
+  
+  if (canvasA && canvasA.height > 0) {
+    const heightA = canvasA.getBoundingClientRect().height;
+    const computedStyleA = window.getComputedStyle(canvasA);
+    
+    if (canvasB && canvasB.height > 0) {
+      const aspectRatioB = canvasB.width / canvasB.height;
+      const targetHeight = heightA;
+      const targetWidth = targetHeight * aspectRatioB;
+      canvasB.style.height = `${targetHeight}px`;
+      canvasB.style.width = `${targetWidth}px`;
+      canvasB.style.maxHeight = computedStyleA.maxHeight || '480px';
+    }
+    
+    if (overlay) {
+      overlay.style.height = `${heightA}px`;
+      overlay.style.maxHeight = computedStyleA.maxHeight || '480px';
+    }
+    
+    if (canvasDiff && canvasDiff.height > 0) {
+      const aspectRatioDiff = canvasDiff.width / canvasDiff.height;
+      const targetHeight = heightA;
+      const targetWidth = targetHeight * aspectRatioDiff;
+      canvasDiff.style.height = `${targetHeight}px`;
+      canvasDiff.style.width = `${targetWidth}px`;
+      canvasDiff.style.maxHeight = computedStyleA.maxHeight || '480px';
+    }
+  }
+}
+
 function syncSelectionCanvasSize() {
-  // Sync canvas selection size and position with diff canvas
-  // Get the actual rendered position and size of canvasDiff
   const diffRect = canvasDiff.getBoundingClientRect();
   const panel = canvasDiff.parentElement!;
   const panelRect = panel.getBoundingClientRect();
   
-  // Calculate position relative to panel (accounting for padding)
   const panelStyle = window.getComputedStyle(panel);
   const paddingTop = parseInt(panelStyle.paddingTop) || 12;
   const paddingLeft = parseInt(panelStyle.paddingLeft) || 12;
   
-  // Set canvasSelection to match canvasDiff exactly
   const computedStyle = window.getComputedStyle(canvasDiff);
   canvasSelection.style.width = computedStyle.width;
   canvasSelection.style.height = computedStyle.height;
   canvasSelection.style.maxHeight = computedStyle.maxHeight || '480px';
   
-  // Position to match canvasDiff (accounting for panel padding)
   canvasSelection.style.top = `${paddingTop}px`;
   canvasSelection.style.left = `${paddingLeft}px`;
 }
@@ -253,13 +277,10 @@ function getCanvasCoordinates(e: MouseEvent): { x: number; y: number } {
 }
 
 function drawSelectionRect(x: number, y: number, w: number, h: number) {
-  // Clear the entire canvas first
   ctxSelection.clearRect(0, 0, canvasSelection.width, canvasSelection.height);
   if (w > 0 && h > 0) {
-    // Show selection canvas when drawing
     canvasSelection.style.opacity = '1';
     canvasSelection.style.visibility = 'visible';
-    // Draw at the same pixel coordinates as the image (canvas handles CSS scaling)
     ctxSelection.strokeStyle = '#22d3ee';
     ctxSelection.lineWidth = 2;
     ctxSelection.setLineDash([5, 5]);
@@ -267,7 +288,6 @@ function drawSelectionRect(x: number, y: number, w: number, h: number) {
     ctxSelection.fillStyle = 'rgba(34, 211, 238, 0.1)';
     ctxSelection.fillRect(x, y, w, h);
   } else {
-    // Hide when no selection
     canvasSelection.style.opacity = '0';
     canvasSelection.style.visibility = 'hidden';
   }
@@ -276,7 +296,6 @@ function drawSelectionRect(x: number, y: number, w: number, h: number) {
 function clearRegionSelection() {
   selectedRegion = null;
   ctxSelection.clearRect(0, 0, canvasSelection.width, canvasSelection.height);
-  // Hide selection canvas when no selection
   canvasSelection.style.opacity = '0';
   canvasSelection.style.visibility = 'hidden';
   btnClearRegion.disabled = true;
@@ -296,7 +315,6 @@ function calculateRegionMetrics(region: { x: number; y: number; w: number; h: nu
   const W = currentImageDataA.width;
   const H = currentImageDataA.height;
 
-  // Clamp region to image bounds
   const x1 = Math.max(0, Math.min(region.x, W));
   const y1 = Math.max(0, Math.min(region.y, H));
   const x2 = Math.max(0, Math.min(region.x + region.w, W));
@@ -333,7 +351,6 @@ function calculateRegionMetrics(region: { x: number; y: number; w: number; h: nu
   const mse = total ? (mseAcc / total) : 0;
   const psnr = mse === 0 ? Infinity : (20 * Math.log10(255) - 10 * Math.log10(mse));
 
-  // Update UI
   rmDims.textContent = `${w} × ${h}`;
   rmPct.textContent = `${pct.toFixed(2)}%`;
   rmMSE.textContent = mse.toFixed(2);
@@ -346,19 +363,22 @@ enableRegionSelect.addEventListener('change', () => {
   if (!enableRegionSelect.checked) {
     clearRegionSelection();
     canvasDiff.style.cursor = 'default';
+    canvasDiff.style.pointerEvents = 'auto';
   } else {
     canvasDiff.style.cursor = 'crosshair';
+    canvasDiff.style.pointerEvents = 'auto';
+    canvasSelection.style.pointerEvents = 'none';
     if (ctxD.canvas.width > 0 && ctxD.canvas.height > 0) {
       syncSelectionCanvasSize();
     }
   }
 });
 
-// Sync canvas sizes on window resize
 window.addEventListener('resize', () => {
   if (enableRegionSelect.checked) {
     syncSelectionCanvasSize();
   }
+  syncOriginalHeights();
 });
 
 btnClearRegion.addEventListener('click', () => {
