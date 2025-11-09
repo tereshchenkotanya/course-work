@@ -58,6 +58,22 @@
       </section>
 
       <section class="card">
+        <h2>Метрики для вибраної області</h2>
+        <div class="controls">
+          <label class="chip"><input id="enableRegionSelect" type="checkbox" /> Увімкнути вибір області</label>
+          <button id="btnClearRegion" class="btn secondary" disabled>Очистити вибір</button>
+        </div>
+        <div class="metrics" id="regionMetrics" style="opacity: 0.5;">
+          <div class="metric"><div class="k" id="rmDims">–</div><div class="t">Розмір області</div></div>
+          <div class="metric"><div class="k" id="rmPct">–</div><div class="t">% різних</div></div>
+          <div class="metric"><div class="k" id="rmDiffCount">–</div><div class="t">К-сть різних пікселів</div></div>
+          <div class="metric"><div class="k" id="rmMSE">–</div><div class="t">MSE</div></div>
+          <div class="metric"><div class="k" id="rmPSNR">–</div><div class="t">PSNR</div></div>
+        </div>
+        <p class="muted small">Увімкніть вибір області та перетягніть мишкою на canvas з результатом порівняння, щоб вибрати область для аналізу.</p>
+      </section>
+
+      <section class="card">
         <h2>2) Оригінали</h2>
         <div class="panel">
           <canvas id="canvasA" width="0" height="0" aria-label="A"></canvas>
@@ -89,8 +105,9 @@
 
       <section class="card">
         <h2>4) Результат порівняння</h2>
-        <div class="panel">
-          <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF"></canvas>
+        <div class="panel" style="position: relative;">
+          <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF" style="position: relative; z-index: 1;"></canvas>
+          <canvas id="canvasSelection" width="0" height="0" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2;"></canvas>
         </div>
         <p class="muted small">«Підсвітка»: червоним — перевищує поріг. <br>
           «Теплова карта»: синій→червоний. <br>
