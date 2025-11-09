@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Попіксельне порівняння зображень</title>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <script type="module" crossorigin src="./assets/index-BJCEg87r.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BILvZSz8.css">
+    <script type="module" crossorigin src="./assets/index-BuAOC57F.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BjcyP3iD.css">
   </head>
   <body>
     <header class="header">
       <h1>Попіксельне порівняння зображень</h1>
-      <p class="muted">Завантаж дві картинки однакового розміру або увімкни підгонку.</p>
+      <p class="muted">Завантаж дві картинки для порівняння (B автоматично підганяється під A).</p>
     </header>
 
     <main class="container">
@@ -29,7 +29,6 @@
         </div>
 
         <div class="controls">
-          <label class="chip"><input id="resizeToA" type="checkbox" /> Примусово підганяти B під A</label>
           <label class="chip">
             Поріг: <input id="tolerance" type="range" min="0" max="255" value="16" />
             <span id="tolVal">16</span>
@@ -89,7 +88,7 @@
       </section>
 
       <section class="card half-width">
-        <h2>4) Результат порівняння</h2>
+        <h2>3) Результат порівняння</h2>
         <div class="panel" style="position: relative;">
           <canvas id="canvasDiff" width="0" height="0" aria-label="DIFF" style="position: relative; z-index: 1;"></canvas>
           <canvas id="canvasSelection" width="0" height="0" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2;"></canvas>
@@ -100,7 +99,7 @@
       </section>
 
       <section class="card half-width">
-        <h2>Метрики для вибраної області</h2>
+        <h2>4) Метрики для вибраної області</h2>
         <div class="controls">
           <label class="chip"><input id="enableRegionSelect" type="checkbox" /> Увімкнути вибір області</label>
           <button id="btnClearRegion" class="btn secondary" disabled>Очистити вибір</button>
