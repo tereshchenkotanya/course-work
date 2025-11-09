@@ -10,7 +10,7 @@
   <body>
     <header class="header">
       <h1>Попіксельне порівняння зображень</h1>
-      <p class="muted">Завантаж дві картинки однакового розміру або увімкни підгонку.</p>
+      <p class="muted">Завантаж дві картинки для порівняння (B автоматично підганяється під A).</p>
     </header>
 
     <main class="container">
@@ -28,7 +28,6 @@
         </div>
 
         <div class="controls">
-          <label class="chip"><input id="resizeToA" type="checkbox" /> Примусово підганяти B під A</label>
           <label class="chip">
             Поріг: <input id="tolerance" type="range" min="0" max="255" value="16" />
             <span id="tolVal">16</span>

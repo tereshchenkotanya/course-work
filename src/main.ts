@@ -3,7 +3,6 @@ import { compareCanvases, loadImage, drawImageToCanvas, type CompareMode } from 
 
 const fileA = document.getElementById('fileA') as HTMLInputElement;
 const fileB = document.getElementById('fileB') as HTMLInputElement;
-const resizeToA = document.getElementById('resizeToA') as HTMLInputElement;
 const tolerance = document.getElementById('tolerance') as HTMLInputElement;
 const tolVal = document.getElementById('tolVal') as HTMLElement;
 const mode = document.getElementById('mode') as HTMLSelectElement;
@@ -61,6 +60,30 @@ tolerance.addEventListener('input', () => {
   }
 });
 
+function drawImageToCanvasPreview(ctx: CanvasRenderingContext2D, img: HTMLImageElement, containerWidth: number, containerHeight: number) {
+  const imgAspect = img.naturalWidth / img.naturalHeight;
+  const containerAspect = containerWidth / containerHeight;
+  
+  let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+  
+  if (imgAspect > containerAspect) {
+    drawWidth = containerWidth;
+    drawHeight = containerWidth / imgAspect;
+    offsetY = (containerHeight - drawHeight) / 2;
+  } else {
+    drawHeight = containerHeight;
+    drawWidth = containerHeight * imgAspect;
+    offsetX = (containerWidth - drawWidth) / 2;
+  }
+  
+  ctx.canvas.width = containerWidth;
+  ctx.canvas.height = containerHeight;
+  ctx.clearRect(0, 0, containerWidth, containerHeight);
+  ctx.fillStyle = '#0b1227';
+  ctx.fillRect(0, 0, containerWidth, containerHeight);
+  ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+}
+
 async function onFilesChanged() {
   const a = fileA.files?.[0];
   const b = fileB.files?.[0];
@@ -77,8 +100,11 @@ async function onFilesChanged() {
     imgObjA = await loadImage(a);
     imgObjB = await loadImage(b);
 
-    drawImageToCanvas(ctxA, imgObjA);
-    drawImageToCanvas(ctxB, imgObjB);
+    const previewWidth = 360;
+    const previewHeight = 480;
+    
+    drawImageToCanvasPreview(ctxA, imgObjA, previewWidth, previewHeight);
+    drawImageToCanvasPreview(ctxB, imgObjB, previewWidth, previewHeight);
 
     syncOriginalHeights();
 
@@ -105,19 +131,14 @@ btnCompare.addEventListener('click', async () => {
   let bForCompare = imgObjB;
 
   if (!sameSize) {
-    if (resizeToA.checked) {
-      const tmp = document.createElement('canvas');
-      tmp.width = W; tmp.height = H;
-      const tctx = tmp.getContext('2d')!;
-      tctx.drawImage(imgObjB, 0, 0, W, H);
-      const resized = new Image();
-      resized.src = tmp.toDataURL();
-      await resized.decode();
-      bForCompare = resized;
-    } else {
-      alert('Різні розміри. Увімкніть підгонку B під A або підготуйте однакові зображення.');
-      return;
-    }
+    const tmp = document.createElement('canvas');
+    tmp.width = W; tmp.height = H;
+    const tctx = tmp.getContext('2d')!;
+    tctx.drawImage(imgObjB, 0, 0, W, H);
+    const resized = new Image();
+    resized.src = tmp.toDataURL();
+    await resized.decode();
+    bForCompare = resized;
   }
 
   drawImageToCanvas(ctxA, imgObjA, W, H);
@@ -172,8 +193,20 @@ btnCompare.addEventListener('click', async () => {
   canvasDiff.style.visibility = 'visible';
   canvasDiff.style.opacity = '1';
 
-  currentImageDataA = ctxA.getImageData(0, 0, W, H);
-  currentImageDataB = ctxB.getImageData(0, 0, W, H);
+  const tempCanvasA = document.createElement('canvas');
+  tempCanvasA.width = W;
+  tempCanvasA.height = H;
+  const tempCtxA = tempCanvasA.getContext('2d')!;
+  tempCtxA.drawImage(imgObjA, 0, 0);
+  
+  const tempCanvasB = document.createElement('canvas');
+  tempCanvasB.width = W;
+  tempCanvasB.height = H;
+  const tempCtxB = tempCanvasB.getContext('2d')!;
+  tempCtxB.drawImage(bForCompare, 0, 0);
+  
+  currentImageDataA = tempCtxA.getImageData(0, 0, W, H);
+  currentImageDataB = tempCtxB.getImageData(0, 0, W, H);
 
   mDims.textContent = `${result.metrics.width} × ${result.metrics.height}`;
   mPct.textContent = `${result.metrics.diffPixelsPct.toFixed(2)}%`;
@@ -182,6 +215,11 @@ btnCompare.addEventListener('click', async () => {
   mDiffCount.textContent = `${result.metrics.diffPixelsCount.toLocaleString()} px`;
 
   btnDownload.disabled = false;
+  
+  const previewWidth = 360;
+  const previewHeight = 480;
+  drawImageToCanvasPreview(ctxA, imgObjA, previewWidth, previewHeight);
+  drawImageToCanvasPreview(ctxB, imgObjB, previewWidth, previewHeight);
   
   clearRegionSelection();
 });
@@ -217,33 +255,45 @@ function syncOriginalHeights() {
   const canvasA = document.getElementById('canvasA') as HTMLCanvasElement;
   const canvasB = document.getElementById('canvasB') as HTMLCanvasElement;
   const overlay = document.getElementById('overlay') as HTMLDivElement;
+  const overlayA = document.getElementById('imgA') as HTMLImageElement;
+  const overlayB = document.getElementById('imgB') as HTMLImageElement;
   const canvasDiff = document.getElementById('canvasDiff') as HTMLCanvasElement;
   
-  if (canvasA && canvasA.height > 0) {
-    const heightA = canvasA.getBoundingClientRect().height;
-    const computedStyleA = window.getComputedStyle(canvasA);
+  if (canvasA && canvasA.width > 0 && canvasA.height > 0 && imgObjA) {
+    const previewWidth = 360;
+    const previewHeight = 480;
     
-    if (canvasB && canvasB.height > 0) {
-      const aspectRatioB = canvasB.width / canvasB.height;
-      const targetHeight = heightA;
-      const targetWidth = targetHeight * aspectRatioB;
-      canvasB.style.height = `${targetHeight}px`;
-      canvasB.style.width = `${targetWidth}px`;
-      canvasB.style.maxHeight = computedStyleA.maxHeight || '480px';
+    canvasA.style.width = `${previewWidth}px`;
+    canvasA.style.height = `${previewHeight}px`;
+    canvasA.style.maxWidth = `${previewWidth}px`;
+    canvasA.style.maxHeight = `${previewHeight}px`;
+    
+    if (canvasB && canvasB.width > 0 && canvasB.height > 0) {
+      canvasB.style.width = `${previewWidth}px`;
+      canvasB.style.height = `${previewHeight}px`;
+      canvasB.style.maxWidth = `${previewWidth}px`;
+      canvasB.style.maxHeight = `${previewHeight}px`;
     }
     
-    if (overlay) {
-      overlay.style.height = `${heightA}px`;
-      overlay.style.maxHeight = computedStyleA.maxHeight || '480px';
+    if (overlay && overlayA.complete && overlayB.complete) {
+      overlay.style.width = `${previewWidth}px`;
+      overlay.style.height = `${previewHeight}px`;
+      overlay.style.maxWidth = `${previewWidth}px`;
+      overlay.style.maxHeight = `${previewHeight}px`;
     }
     
-    if (canvasDiff && canvasDiff.height > 0) {
-      const aspectRatioDiff = canvasDiff.width / canvasDiff.height;
-      const targetHeight = heightA;
-      const targetWidth = targetHeight * aspectRatioDiff;
-      canvasDiff.style.height = `${targetHeight}px`;
-      canvasDiff.style.width = `${targetWidth}px`;
-      canvasDiff.style.maxHeight = computedStyleA.maxHeight || '480px';
+    if (canvasDiff && canvasDiff.width > 0 && canvasDiff.height > 0) {
+      const naturalWidthDiff = canvasDiff.width;
+      const naturalHeightDiff = canvasDiff.height;
+      const aspectRatioDiff = naturalWidthDiff / naturalHeightDiff;
+      const maxDisplayHeight = 480;
+      
+      let displayHeightDiff = Math.min(naturalHeightDiff, maxDisplayHeight);
+      let displayWidthDiff = displayHeightDiff * aspectRatioDiff;
+      
+      canvasDiff.style.width = `${displayWidthDiff}px`;
+      canvasDiff.style.height = `${displayHeightDiff}px`;
+      canvasDiff.style.maxHeight = `${maxDisplayHeight}px`;
     }
   }
 }

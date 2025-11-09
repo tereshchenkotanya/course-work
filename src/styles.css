@@ -150,10 +150,11 @@ input[type="file"] {
 }
 
 .original-item canvas {
-  width: 100%;
-  height: auto;
+  width: 360px;
+  height: 480px;
   margin-top: 0 !important;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .overlay-container {
@@ -176,12 +177,13 @@ input[type="file"] {
   }
   
   .original-item canvas {
-    width: 100%;
+    width: 360px;
+    height: 480px;
   }
 }
 
 canvas {
-  width: 100%;
+  width: auto;
   max-height: 480px;
   background: #0b1227;
   border-radius: 12px;
